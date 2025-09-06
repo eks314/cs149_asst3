@@ -60,6 +60,15 @@ int main(int argc, char** argv)
       saxpyCuda(N, alpha, xarray, yarray, resultarray);
     }
 
+    for (int i = 0; i < N; i++) {
+        double expected = alpha * xarray[i] + yarray[i];
+        if (resultarray[i] != expected) {
+            printf("Error: resultarray[%d] = %f, expected %f\n", i, resultarray[i], expected);
+            return 1;
+        }
+    }
+    printf("No errors\n");
+
     delete [] xarray;
     delete [] yarray;
     delete [] resultarray;
