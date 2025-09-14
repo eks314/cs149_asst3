@@ -218,7 +218,7 @@ loadCircleScene(
             velocity[index3+2] = 0.f;
         }
 
-    }else if (sceneName == BOUNCING_BALLS) {
+    } else if (sceneName == BOUNCING_BALLS) {
         srand(0);
         numCircles = 10;   
         position = new float[3 * numCircles]; 
@@ -335,9 +335,9 @@ loadCircleScene(
         }
 
         if (fscanf(file, "%d\n", &numCircles) != 1) {
-	  fprintf(stderr, "Error reading num circles data from scene file.\n");
-	  exit(1);
-	}
+	      fprintf(stderr, "Error reading num circles data from scene file.\n");
+	      exit(1);
+	    }
 
         position = new float[3 * numCircles];
         velocity = new float[3 * numCircles];
@@ -350,9 +350,9 @@ loadCircleScene(
 		       &position[index3], &position[index3+1], &position[index3+2],
 		       &velocity[index3], &velocity[index3+1], &velocity[index3+2],
 		       &radius[i]) != 7) {
-	      fprintf(stderr, "Error reading circle data from scene file.\n");
-	      exit(1);
-	    }
+	              fprintf(stderr, "Error reading circle data from scene file.\n");
+	              exit(1);
+	            }
         }
 	
         fclose(file);

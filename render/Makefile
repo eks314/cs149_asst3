@@ -28,7 +28,9 @@ LIBS       :=
 FRAMEWORKS :=
 
 NVCCFLAGS=-O3 -m64
-LIBS += GL glut cudart
+# temporary disable
+#LIBS += GL glut cudart
+LIBS += GL cudart
 
 ifneq ($(wildcard /opt/cuda-8.0/.*),)
 # Latedays

@@ -1,3 +1,4 @@
+#ifdef GLUT
 #include <algorithm>
 
 #include "circleRenderer.h"
@@ -162,3 +163,4 @@ startRendererWithDisplay(CircleRenderer* renderer) {
     glutKeyboardFunc(handleKeyPress);
     glutMainLoop();
 }
+#endif //GLUT

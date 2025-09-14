@@ -21,7 +21,7 @@ void usage(const char* progname) {
     printf("Valid scenenames are: rgb, rgby, rand10k, rand100k, rand1M, biglittle, littlebig, pattern, micro2M,\n"
            "                      bouncingballs, fireworks, hypnosis, snow, snowsingle\n");
     printf("Program Options:\n");
-    printf("  -r  --renderer <cpuref/cuda>  Select renderer: ref or cuda (default=cuda)\n");
+    printf("  -r  --renderer <cpuref/cuda>  Select renderer: cpuref or cuda (default=cuda)\n");
     printf("  -s  --size  <INT>             Rendered image size: <INT>x<INT> pixels (default=%d)\n", DEFAULT_IMAGE_SIZE);    
     printf("  -b  --bench <START:END>       Run for frames [START,END) (default=[0,1))\n");
     printf("  -c  --check                   Check correctness of CUDA output against CPU reference\n");
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
         {"file",        1, 0,  'f'},
         {"renderer",    1, 0,  'r'},
         {"size",        1, 0,  's'},
-        {0 ,0, 0, 0}
+        {0, 0, 0, 0}
     };
 
     while ((opt = getopt_long(argc, argv, "b:f:r:s:ci?", long_options, NULL)) != EOF) {
@@ -68,9 +68,9 @@ int main(int argc, char** argv)
                 exit(1);
             }
             break;
-	case 'i':
+        case 'i':
    	    interactiveMode = true;
-	    break;
+            break;
         case 'c':
             checkCorrectness = true;
             break;
@@ -82,11 +82,11 @@ int main(int argc, char** argv)
                 useRefRenderer = false;
             } else if (std::string(optarg).compare("cpuref") == 0) {
 	      useRefRenderer = true;
-	    } else {
-	      fprintf(stderr, "ERROR: Unknown renderer type: %s\n", optarg);
-	      usage(argv[0]);
-	      return 1;
-	    }
+	        } else {
+	          fprintf(stderr, "ERROR: Unknown renderer type: %s\n", optarg);
+	          usage(argv[0]);
+	          return 1;
+	        }
             break;
         case 's':
             imageSize = atoi(optarg);
@@ -178,10 +178,12 @@ int main(int argc, char** argv)
 
         if (!interactiveMode)
             startBenchmark(renderer, benchmarkFrameStart, benchmarkFrameEnd - benchmarkFrameStart, frameFilename);
+#ifdef GLUT
         else {
             glutInit(&argc, argv);
             startRendererWithDisplay(renderer);
         }
+#endif
     }
 
     return 0;
