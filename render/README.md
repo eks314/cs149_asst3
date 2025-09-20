@@ -46,3 +46,33 @@ while not queue.empty():
 	synchronize()
 ```
 
+Task generation.
+
+```
+Circle:
+	float	radius;
+	float2	pos;
+	float3	colour;
+
+Task:
+	short2	rectangle;
+	Circle	circles[N_TASK_CIRCLES];
+
+Kernel:
+	# 1. check rectangle
+	# 2. put it to circlesData if intersects
+	# 3. if circlesIx full then atomicAdd to new task
+	# 4. if new task more than maxTask then assert(False) for now
+	# 5. in future will save your progress
+```
+
+Why this cannot be fused into one stage? With this design for a block of pixels completely skip big number of circles.
+So first step is global pre-filter. Which feels like can only be a separate step.
+
+
+Alternative approach:
+
+Assume complex effects are not used in case when there are many circles.
+Fact check: 100K for snow
+			where max is 2M
+			but snow should be small?
