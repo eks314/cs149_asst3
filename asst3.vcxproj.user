@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <RemoteDebuggerCommandArguments>snow</RemoteDebuggerCommandArguments>
+    <RemoteDebuggerWorkingDirectory>
+    </RemoteDebuggerWorkingDirectory>
+    <DebuggerFlavor>LinuxDebugger</DebuggerFlavor>
+    <RemoteDebuggerCommand>
+    </RemoteDebuggerCommand>
+    <AdditionalSymbolSearchPaths>objs</AdditionalSymbolSearchPaths>
+    <RemoteGDBPath>/usr/local/cuda-13.0/bin/cuda-gdb</RemoteGDBPath>
+    <RemoteDebuggingTarget>1936580592;localhost (username=, port=22, authentication=Password)</RemoteDebuggingTarget>
+  </PropertyGroup>
+</Project>

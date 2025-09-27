@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x86">
+      <Configuration>Debug</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x86">
+      <Configuration>Release</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{e188fa16-2545-4f07-bc41-13c6b1544787}</ProjectGuid>
+    <Keyword>Linux</Keyword>
+    <RootNamespace>asst3</RootNamespace>
+    <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+    <ApplicationType>Linux</ApplicationType>
+    <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
+    <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
+    <LinuxProjectType>{FC1A4D80-50E9-41DA-9192-61C0DBAA00D2}</LinuxProjectType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <NMakeIncludeSearchPath>C:\Users\Mikhail Home Work\asst3_includes\usr_include_cpp_13;C:\Users\Mikhail Home Work\asst3_includes\usr_include;C:\Users\Mikhail Home Work\asst3_includes\cuda_include;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <BuildCommandLine>
+    </BuildCommandLine>
+    <RemoteBuildCommandLine>export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Users/MIKHAI~2/DOCUME~1/MobaXterm/slash/bin:/mnt/c/WINDOWS/:/mnt/c/WINDOWS/system32/:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/Program Files/dotnet/:/mnt/c/Users/Mikhail Home Work/AppData/Local/Microsoft/WindowsApps:/mnt/c/WINDOWS/sysnative/:/snap/bin:/usr/local/cuda-13.0/bin"
+cd render &amp;&amp; make</RemoteBuildCommandLine>
+    <ProjectPublicIncludePath>
+    </ProjectPublicIncludePath>
+    <RemoteBuildOutputs>render/render</RemoteBuildOutputs>
+    <RemoteCleanCommandLine>cd render &amp;&amp; rm -rf object &amp;&amp; rm -f render</RemoteCleanCommandLine>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="render\benchmark.cu" />
+    <None Include="render\circleBoxTest.cu_inl" />
+    <None Include="render\cudaRenderer.cu" />
+    <None Include="render\exclusiveScan.cu_inl" />
+    <None Include="render\lookupColor.cu_inl" />
+    <None Include="render\Makefile" />
+    <None Include="render\noiseCuda.cu_inl" />
+    <None Include="render\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="render\circleRenderer.h" />
+    <ClInclude Include="render\cudaRenderer.h" />
+    <ClInclude Include="render\cycleTimer.h" />
+    <ClInclude Include="render\image.h" />
+    <ClInclude Include="render\noise.h" />
+    <ClInclude Include="render\platformgl.h" />
+    <ClInclude Include="render\ppm.h" />
+    <ClInclude Include="render\refRenderer.h" />
+    <ClInclude Include="render\sceneLoader.h" />
+    <ClInclude Include="render\util.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="render\display.cpp" />
+    <ClCompile Include="render\main.cpp" />
+    <ClCompile Include="render\noise.cpp" />
+    <ClCompile Include="render\ppm.cpp" />
+    <ClCompile Include="render\refRenderer.cpp" />
+    <ClCompile Include="render\sceneLoader.cpp" />
+  </ItemGroup>
+  <ItemDefinitionGroup />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
