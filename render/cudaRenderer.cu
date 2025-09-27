@@ -458,6 +458,31 @@ shadeAlwaysSimple(float4 existingColor, float3 rgb) {
     return newColor;
 }
 
+// shadePixel2 -- (CUDA device code)
+//
+// same as above, but takes different parameters
+__device__ __inline__ float4
+shadeSimple(float4 existingColor, float3 rgb, float2 pixelCenter, float3 circlePosRad) {
+    float diffX = circlePosRad.x - pixelCenter.x;
+    float diffY = circlePosRad.y - pixelCenter.y;
+    float rad = circlePosRad.z;
+    float pixelDist = diffX * diffX + diffY * diffY;
+    float maxDist = rad * rad;
+    if (pixelDist > maxDist)
+    {
+        return existingColor;
+    }
+
+    constexpr float alpha = .5f;
+    constexpr float oneMinusAlpha = .5f;
+    float4 newColor;
+    newColor.x = alpha * rgb.x + oneMinusAlpha * existingColor.x;
+    newColor.y = alpha * rgb.y + oneMinusAlpha * existingColor.y;
+    newColor.z = alpha * rgb.z + oneMinusAlpha * existingColor.z;
+    newColor.w = alpha + existingColor.w;
+    return newColor;
+}
+
 // kernelBuildTouchCircles -- (CUDA device code)
 //
 // For each block of pixels, build a list of circles that might
@@ -515,8 +540,6 @@ __global__ void kernelBuildTouchCircles() {
     *touchesCountPtr = touchesCount;
 }
 
-
-
 // kernelShadeTouchCircles -- (CUDA device code)
 //
 // Each thread shades a pixel, using the list of circles that
@@ -527,10 +550,18 @@ __global__ void kernelShadeTouchCircles() {
     int pixelY = blockIdx.y * blockDim.y + threadIdx.y;
     int cell = blockIdx.x + blockIdx.y * gridDim.x;
 
+    short imageWidth = cuConstRendererParams.imageWidth;
+    short imageHeight = cuConstRendererParams.imageHeight;
+    float invWidth = 1.f / imageWidth;
+    float invHeight = 1.f / imageHeight;
+
     ushort touchesCount = cuConstRendererParams.touchCirclesCount[cell];
     TouchCircle* circlesPtr = &cuConstRendererParams.touchCircles[cell * MAX_CIRCLES_PER_BLOCK];
     TouchCircle* circlesEndPtr = circlesPtr + touchesCount;
-    
+
+    float2 pixelCenter = make_float2(invWidth * (static_cast<float>(pixelX) + 0.5f),
+                                     invHeight * (static_cast<float>(pixelY) + 0.5f));
+
     if (circlesPtr < circlesEndPtr)
     {
         short imageWidth = cuConstRendererParams.imageWidth;
@@ -539,9 +570,8 @@ __global__ void kernelShadeTouchCircles() {
         float4 currentColor = *imgPtr;
         do
         {
-            currentColor = shadeAlwaysSimple(currentColor, circlesPtr->colour);
+            currentColor = shadeSimple(currentColor, circlesPtr->colour, pixelCenter, circlesPtr->pos_radius);
             circlesPtr++;
-
         } while (circlesPtr < circlesEndPtr);
         *imgPtr = currentColor;
     }

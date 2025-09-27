@@ -12,7 +12,7 @@
     <RemoteDebuggingTarget>1936580592;localhost (username=, port=22, authentication=Password)</RemoteDebuggingTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugAWS|x64'">
-    <RemoteDebuggerCommandArguments>snow</RemoteDebuggerCommandArguments>
+    <RemoteDebuggerCommandArguments>rgb</RemoteDebuggerCommandArguments>
     <RemoteDebuggerWorkingDirectory />
     <DebuggerFlavor>LinuxDebugger</DebuggerFlavor>
     <RemoteDebuggerCommand />
