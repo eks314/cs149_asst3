@@ -26,6 +26,9 @@ private:
     float* cudaDeviceColor;
     float* cudaDeviceRadius;
     float* cudaDeviceImageData;
+    
+    void*  touchCircles;
+    ushort* touchCirclesCount;
 
 public:
 

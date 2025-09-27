@@ -21,16 +21,18 @@ else
 endif
 
 OBJDIR=objs
-CXXFLAGS=-O3 -Wall -g
+#CXXFLAGS=-O3 -Wall -g
+CXXFLAGS=-O0 -Wall -g
 HOSTNAME=$(shell hostname)
 
 LIBS       :=
 FRAMEWORKS :=
 
-NVCCFLAGS=-O3 -m64
+#NVCCFLAGS=-O3 -m64
+NVCCFLAGS=-O0 -m64 -g -G
 # temporary disable
 #LIBS += GL glut cudart
-LIBS += GL cudart
+LIBS += cudart
 
 ifneq ($(wildcard /opt/cuda-8.0/.*),)
 # Latedays

@@ -8,6 +8,7 @@
 #include <cuda_runtime.h>
 #include <driver_functions.h>
 
+#include "circleBoxTest.cu_inl"
 #include "cudaRenderer.h"
 #include "image.h"
 #include "noise.h"
@@ -17,6 +18,18 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // Putting all the cuda kernels here
 ///////////////////////////////////////////////////////////////////////////////////////
+
+struct TouchCircle
+{
+    float3 pos_radius;
+    float3 colour;
+};
+
+constexpr size_t MAX_SIZE = 1024;
+constexpr size_t BLOCK_SIZE = 32;
+constexpr ushort MAX_CIRCLES_PER_BLOCK = 100;
+constexpr size_t N_BLOCKS = (MAX_SIZE / BLOCK_SIZE) * (MAX_SIZE / BLOCK_SIZE);
+#define myAssert(expr) do { if(!(expr)) { printf("Assert at %s:%d", __FILE__, __LINE__); abort(); } } while(0)
 
 struct GlobalConstants {
 
@@ -31,6 +44,9 @@ struct GlobalConstants {
     int imageWidth;
     int imageHeight;
     float* imageData;
+
+    ushort* touchCirclesCount;
+    TouchCircle* touchCircles;
 };
 
 // Global variable that is in scope, but read-only, for all cuda
@@ -324,7 +340,7 @@ shadePixel(int circleIndex, float2 pixelCenter, float3 p, float4* imagePtr) {
     float diffY = p.y - pixelCenter.y;
     float pixelDist = diffX * diffX + diffY * diffY;
 
-    float rad = cuConstRendererParams.radius[circleIndex];;
+    float rad = cuConstRendererParams.radius[circleIndex];
     float maxDist = rad * rad;
 
     // circle does not contribute to the image
@@ -427,23 +443,130 @@ __global__ void kernelRenderCircles() {
     }
 }
 
+// shadePixel2 -- (CUDA device code)
+//
+// same as above, but takes different parameters
+__device__ __inline__ float4
+shadeAlwaysSimple(float4 existingColor, float3 rgb) {
+    constexpr float alpha = .5f;
+    constexpr float oneMinusAlpha = .5f;
+    float4 newColor;
+    newColor.x = alpha * rgb.x + oneMinusAlpha * existingColor.x;
+    newColor.y = alpha * rgb.y + oneMinusAlpha * existingColor.y;
+    newColor.z = alpha * rgb.z + oneMinusAlpha * existingColor.z;
+    newColor.w = alpha + existingColor.w;
+    return newColor;
+}
+
+// kernelBuildTouchCircles -- (CUDA device code)
+//
+// For each block of pixels, build a list of circles that might
+// contribute to the pixels in that block.  The list is stored in
+// global memory, and is used later by kernelShadeTouchCircles to
+// do the actual shading.
+__global__ void kernelBuildTouchCircles() {
+
+    int index = blockDim.x * threadIdx.y + threadIdx.x;
+
+    ushort* touchesCountPtr = &cuConstRendererParams.touchCirclesCount[index];
+    TouchCircle* output = &cuConstRendererParams.touchCircles[index * (MAX_CIRCLES_PER_BLOCK)];
+
+    short imageWidth = cuConstRendererParams.imageWidth;
+    short imageHeight = cuConstRendererParams.imageHeight;
+    float invWidth = 1.f / imageWidth;
+    float invHeight = 1.f / imageHeight;
+    
+    float minX = (BLOCK_SIZE * threadIdx.x       + 0.5) * invWidth;
+    float maxX = (BLOCK_SIZE * (threadIdx.x + 1) - 0.5) * invWidth;
+    float minY = (BLOCK_SIZE * threadIdx.y       + 0.5) * invHeight;
+    float maxY = (BLOCK_SIZE * (threadIdx.y + 1) - 0.5) * invHeight;
+
+    //  potential optimization of same action:
+    //      iter 1: set bit mask per batch of circles
+    //      iter 2: join bit masks together to build list
+
+    ushort touchesCount = 0;
+    
+    float* rad = cuConstRendererParams.radius;
+    float3* pos = (float3*)cuConstRendererParams.position;
+    float3* firstPos = (float3*)cuConstRendererParams.position;
+    float3* lastPos = pos + cuConstRendererParams.numCircles;
+
+    for (; pos < lastPos; pos++, rad++)
+    {
+        float circleRadius = *rad;
+        float circleX = pos->x;
+        float circleY = pos->y;
+        if (circleInBoxConservative(circleX, circleY, circleRadius, minX, maxX, maxY, minY))
+        {
+            if (circleInBox(circleX, circleY, circleRadius, minX, maxX, maxY, minY))
+            {
+                if (touchesCount < MAX_CIRCLES_PER_BLOCK)
+                {
+                    int iCircle = (int)(pos - firstPos);
+                    output->colour = ((float3*)cuConstRendererParams.color)[iCircle];
+                    output->pos_radius = make_float3(circleX, circleY, circleRadius);
+                    touchesCount++;
+                    output++;
+                }
+            }
+        }
+    }
+    *touchesCountPtr = touchesCount;
+}
+
+
+
+// kernelShadeTouchCircles -- (CUDA device code)
+//
+// Each thread shades a pixel, using the list of circles that
+// potentially contribute to that pixel.
+__global__ void kernelShadeTouchCircles() {
+
+    int pixelX = blockIdx.x * blockDim.x + threadIdx.x;
+    int pixelY = blockIdx.y * blockDim.y + threadIdx.y;
+    int cell = blockIdx.x + blockIdx.y * gridDim.x;
+
+    ushort touchesCount = cuConstRendererParams.touchCirclesCount[cell];
+    TouchCircle* circlesPtr = &cuConstRendererParams.touchCircles[cell * MAX_CIRCLES_PER_BLOCK];
+    TouchCircle* circlesEndPtr = circlesPtr + touchesCount;
+    
+    if (circlesPtr < circlesEndPtr)
+    {
+        short imageWidth = cuConstRendererParams.imageWidth;
+
+        float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pixelY * imageWidth + pixelX)]);
+        float4 currentColor = *imgPtr;
+        do
+        {
+            currentColor = shadeAlwaysSimple(currentColor, circlesPtr->colour);
+            circlesPtr++;
+
+        } while (circlesPtr < circlesEndPtr);
+        *imgPtr = currentColor;
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
 CudaRenderer::CudaRenderer() {
-    image = NULL;
+    image = nullptr;
 
     numCircles = 0;
-    position = NULL;
-    velocity = NULL;
-    color = NULL;
-    radius = NULL;
+    position = nullptr;
+    velocity = nullptr;
+    color = nullptr;
+    radius = nullptr;
 
-    cudaDevicePosition = NULL;
-    cudaDeviceVelocity = NULL;
-    cudaDeviceColor = NULL;
-    cudaDeviceRadius = NULL;
-    cudaDeviceImageData = NULL;
+    cudaDevicePosition = nullptr;
+    cudaDeviceVelocity = nullptr;
+    cudaDeviceColor = nullptr;
+    cudaDeviceRadius = nullptr;
+    cudaDeviceImageData = nullptr;
+    touchCircles = nullptr;
+    touchCirclesCount = nullptr;
 }
 
 CudaRenderer::~CudaRenderer() {
@@ -465,6 +588,8 @@ CudaRenderer::~CudaRenderer() {
         cudaFree(cudaDeviceColor);
         cudaFree(cudaDeviceRadius);
         cudaFree(cudaDeviceImageData);
+        cudaFree(touchCircles);
+        cudaFree(touchCirclesCount);
     }
 }
 
@@ -531,6 +656,20 @@ CudaRenderer::setup() {
     cudaMemcpy(cudaDeviceColor, color, sizeof(float) * 3 * numCircles, cudaMemcpyHostToDevice);
     cudaMemcpy(cudaDeviceRadius, radius, sizeof(float) * numCircles, cudaMemcpyHostToDevice);
 
+    myAssert(image->width <= MAX_SIZE);
+    myAssert(image->height <= MAX_SIZE);
+    //  TODO: add sorting
+    for (int i = 1; i < numCircles; i++)
+    {
+        if (position[(i - 1) * 3 + 2] < position[i * 3 + 2])
+        {
+            printf("Sorting is required!");
+            myAssert(false);
+        }
+    }
+    cudaMalloc(&touchCircles, N_BLOCKS * MAX_CIRCLES_PER_BLOCK * sizeof(TouchCircle));
+    cudaMalloc(&touchCirclesCount, N_BLOCKS * sizeof(decltype(*touchCirclesCount)));
+
     // Initialize parameters in constant memory.  We didn't talk about
     // constant memory in class, but the use of read-only constant
     // memory here is an optimization over just sticking these values
@@ -549,6 +688,8 @@ CudaRenderer::setup() {
     params.color = cudaDeviceColor;
     params.radius = cudaDeviceRadius;
     params.imageData = cudaDeviceImageData;
+    params.touchCircles = (TouchCircle*)touchCircles;
+    params.touchCirclesCount = touchCirclesCount;
 
     cudaMemcpyToSymbol(cuConstRendererParams, &params, sizeof(GlobalConstants));
 
@@ -635,11 +776,31 @@ CudaRenderer::advanceAnimation() {
 
 void
 CudaRenderer::render() {
+    {
+        // TODO: remove
+        cudaMemset(touchCirclesCount, 0, N_BLOCKS * sizeof(decltype(*touchCirclesCount)));
 
-    // 256 threads per block is a healthy number
-    dim3 blockDim(256, 1);
-    dim3 gridDim((numCircles + blockDim.x - 1) / blockDim.x);
+        // 256 threads per block is a healthy number
+        size_t yBlocks = (image->height + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        size_t xBlocks = (image->width + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    kernelRenderCircles<<<gridDim, blockDim>>>();
-    cudaDeviceSynchronize();
+        dim3 blockDim(xBlocks, yBlocks);
+        dim3 gridDim(1, 1);
+
+        kernelBuildTouchCircles << <gridDim, blockDim >> > ();
+        cudaDeviceSynchronize();
+    }
+
+    {
+                // 256 threads per block is a healthy number
+        size_t yBlocks = (image->height + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        size_t xBlocks = (image->width + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+        dim3 blockDim(BLOCK_SIZE, BLOCK_SIZE);
+        dim3 gridDim(xBlocks, yBlocks);
+
+        kernelShadeTouchCircles << <gridDim, blockDim >> > ();
+        cudaDeviceSynchronize();
+    }
+
 }
