@@ -29,7 +29,7 @@ LIBS       :=
 FRAMEWORKS :=
 
 #NVCCFLAGS=-O3 -m64
-NVCCFLAGS=-O0 -m64 -g -G
+NVCCFLAGS=-O0 -m64 -g -G --extended-lambda
 # temporary disable
 #LIBS += GL glut cudart
 LIBS += cudart

@@ -54,6 +54,9 @@ public:
         float pixelCenterX, float pixelCenterY,
         float px, float py, float pz,
         float* pixelData);
+
+    void orderCirclesByDepth();
+
 };
 
 

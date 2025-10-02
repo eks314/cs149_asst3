@@ -1,3 +1,9 @@
+#include <thrust/device_vector.h>
+#include <thrust/sort.h>
+#include <thrust/sequence.h>
+#include <thrust/gather.h>
+#include <thrust/execution_policy.h>
+
 #include <string>
 #include <algorithm>
 #include <math.h>
@@ -645,6 +651,48 @@ CudaRenderer::loadScene(SceneName scene) {
     loadCircleScene(sceneName, numCircles, position, velocity, color, radius);
 }
 
+void CudaRenderer::orderCirclesByDepth()
+{
+    thrust::device_vector<int> indices(numCircles);
+    thrust::sequence(indices.begin(), indices.end());
+    thrust::sort(
+        indices.begin(), indices.end(),
+            [position=cudaDevicePosition] __device__(int i, int j) -> bool {
+                return position[i*3 + 2] < position[j*3 + 2];
+            }
+    );
+
+    float* buffer = nullptr;
+    cudaMalloc((void**)&buffer, numCircles * sizeof(float) * 3);
+
+    thrust::gather(thrust::device,
+        indices.begin(), indices.end(),
+        (float3*)cudaDevicePosition,
+        (float3*)buffer);
+    cudaMemcpy(cudaDevicePosition, buffer, numCircles * sizeof(float) * 3, cudaMemcpyDeviceToDevice);
+
+    thrust::gather(thrust::device,
+        indices.begin(), indices.end(),
+        (float3*)cudaDeviceVelocity,
+        (float3*)buffer);
+    cudaMemcpy(cudaDeviceVelocity, buffer, numCircles * sizeof(float) * 3, cudaMemcpyDeviceToDevice);
+
+    thrust::gather(thrust::device,
+        indices.begin(), indices.end(),
+        (float3*)cudaDeviceColor,
+        (float3*)buffer);
+    cudaMemcpy(cudaDeviceColor, buffer, numCircles * sizeof(float) * 3, cudaMemcpyDeviceToDevice);
+
+    thrust::gather(thrust::device,
+        indices.begin(), indices.end(),
+        (float3*)cudaDeviceRadius,
+        (float3*)buffer);
+    cudaMemcpy(cudaDeviceRadius, buffer, numCircles * sizeof(float), cudaMemcpyDeviceToDevice);
+
+    cudaFree(buffer);
+}
+
+
 void
 CudaRenderer::setup() {
 
@@ -686,6 +734,8 @@ CudaRenderer::setup() {
     cudaMemcpy(cudaDeviceColor, color, sizeof(float) * 3 * numCircles, cudaMemcpyHostToDevice);
     cudaMemcpy(cudaDeviceRadius, radius, sizeof(float) * numCircles, cudaMemcpyHostToDevice);
 
+    orderCirclesByDepth();
+
     myAssert(image->width <= MAX_SIZE);
     myAssert(image->height <= MAX_SIZE);
     //  TODO: add sorting
@@ -693,7 +743,7 @@ CudaRenderer::setup() {
     {
         if (position[(i - 1) * 3 + 2] < position[i * 3 + 2])
         {
-            printf("Sorting is required!");
+            printf("Sorting is required!\n");
             myAssert(false);
         }
     }
