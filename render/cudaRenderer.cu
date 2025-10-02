@@ -653,6 +653,7 @@ CudaRenderer::loadScene(SceneName scene) {
 
 void CudaRenderer::orderCirclesByDepth()
 {
+    /*
     thrust::device_vector<int> indices(numCircles);
     thrust::sequence(indices.begin(), indices.end());
     thrust::stable_sort(
@@ -679,6 +680,7 @@ void CudaRenderer::orderCirclesByDepth()
     scatter(cudaDeviceRadius);
 
     cudaFree(buffer);
+    */
 }
 
 void
