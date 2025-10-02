@@ -135,6 +135,7 @@ cd render &amp;&amp; make</RemoteBuildCommandLine>
     <RemoteCleanCommandLine>cd render &amp;&amp; rm -rf object &amp;&amp; rm -f render</RemoteCleanCommandLine>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="output_0000.ppm" />
     <None Include="render\benchmark.cu" />
     <None Include="render\circleBoxTest.cu_inl" />
     <None Include="render\cudaRenderer.cu" />

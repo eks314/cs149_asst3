@@ -655,43 +655,31 @@ void CudaRenderer::orderCirclesByDepth()
 {
     thrust::device_vector<int> indices(numCircles);
     thrust::sequence(indices.begin(), indices.end());
-    thrust::sort(
+    thrust::stable_sort(
         indices.begin(), indices.end(),
             [position=cudaDevicePosition] __device__(int i, int j) -> bool {
-                return position[i*3 + 2] < position[j*3 + 2];
+                return position[i*3 + 2] > position[j*3 + 2];
             }
     );
 
     float* buffer = nullptr;
     cudaMalloc((void**)&buffer, numCircles * sizeof(float) * 3);
 
-    thrust::gather(thrust::device,
-        indices.begin(), indices.end(),
-        (float3*)cudaDevicePosition,
-        (float3*)buffer);
-    cudaMemcpy(cudaDevicePosition, buffer, numCircles * sizeof(float) * 3, cudaMemcpyDeviceToDevice);
-
-    thrust::gather(thrust::device,
-        indices.begin(), indices.end(),
-        (float3*)cudaDeviceVelocity,
-        (float3*)buffer);
-    cudaMemcpy(cudaDeviceVelocity, buffer, numCircles * sizeof(float) * 3, cudaMemcpyDeviceToDevice);
-
-    thrust::gather(thrust::device,
-        indices.begin(), indices.end(),
-        (float3*)cudaDeviceColor,
-        (float3*)buffer);
-    cudaMemcpy(cudaDeviceColor, buffer, numCircles * sizeof(float) * 3, cudaMemcpyDeviceToDevice);
-
-    thrust::gather(thrust::device,
-        indices.begin(), indices.end(),
-        (float3*)cudaDeviceRadius,
-        (float3*)buffer);
-    cudaMemcpy(cudaDeviceRadius, buffer, numCircles * sizeof(float), cudaMemcpyDeviceToDevice);
+    auto scatter = [n=numCircles, &indices, &buffer]<typename T>(T* values)
+    {
+        thrust::scatter(thrust::device,
+            values, values + n,
+            indices.begin(),
+            (T*)buffer);
+        cudaMemcpy(values, buffer, n * sizeof(T), cudaMemcpyDeviceToDevice);
+    };
+    scatter((float3*)cudaDevicePosition);
+    scatter((float3*)cudaDeviceVelocity);
+    scatter((float3*)cudaDeviceColor);
+    scatter(cudaDeviceRadius);
 
     cudaFree(buffer);
 }
-
 
 void
 CudaRenderer::setup() {
@@ -738,15 +726,6 @@ CudaRenderer::setup() {
 
     myAssert(image->width <= MAX_SIZE);
     myAssert(image->height <= MAX_SIZE);
-    //  TODO: add sorting
-    for (int i = 1; i < numCircles; i++)
-    {
-        if (position[(i - 1) * 3 + 2] < position[i * 3 + 2])
-        {
-            printf("Sorting is required!\n");
-            myAssert(false);
-        }
-    }
     cudaMalloc(&touchCircles, N_BLOCKS * MAX_CIRCLES_PER_BLOCK * sizeof(TouchCircle));
     cudaMalloc(&touchCirclesCount, N_BLOCKS * sizeof(decltype(*touchCirclesCount)));
 

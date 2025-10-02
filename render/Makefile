@@ -22,14 +22,14 @@ endif
 
 OBJDIR=objs
 #CXXFLAGS=-O3 -Wall -g
-CXXFLAGS=-O0 -Wall -g
+CXXFLAGS=-O0 -Wall -g -std=c++20
 HOSTNAME=$(shell hostname)
 
 LIBS       :=
 FRAMEWORKS :=
 
 #NVCCFLAGS=-O3 -m64
-NVCCFLAGS=-O0 -m64 -g -G --extended-lambda
+NVCCFLAGS=-O0 -m64 -g -G --extended-lambda --std c++20
 # temporary disable
 #LIBS += GL glut cudart
 LIBS += cudart
