@@ -72,3 +72,6 @@ $(OBJDIR)/%.o: %.cpp
 
 $(OBJDIR)/%.o: %.cu
 		$(NVCC) $< $(NVCCFLAGS) -c -o $@
+
+check-all:
+	echo "rgb rgby rand10k rand100k rand1M biglittle littlebig pattern micro2M bouncingballs fireworks hypnosis snow snowsingle" | tr " " "\n" | xargs -I {} bash -c "./render -c {} 2>&1 | tee check/{}.out"

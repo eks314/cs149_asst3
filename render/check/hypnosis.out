@@ -1,0 +1,25 @@
+Rendering to 1024x1024 image
+Loaded scene with 25 circles
+Loaded scene with 25 circles
+---------------------------------------------------------
+Initializing CUDA for CudaRenderer
+Found 1 CUDA devices
+Device 0: Tesla T4
+   SMs:        40
+   Global mem: 14914 MB
+   CUDA Cap:   7.5
+---------------------------------------------------------
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Dumping frames to output_xxx.ppm
+Copying image data from device
+Wrote image file output_0000.ppm
+Copying image data from device
+***************** Correctness check passed **************************
+Clear:    0.1978 ms
+Advance:  0.0197 ms
+Render:   2.8027 ms
+Total:    3.0203 ms
+File IO:  96.8685 ms
+
+Overall:  0.3247 sec (note units are seconds)

@@ -853,7 +853,7 @@ CudaRenderer::render() {
     }
 
     {
-                // 256 threads per block is a healthy number
+        // 256 threads per block is a healthy number
         size_t yBlocks = (image->height + BLOCK_SIZE - 1) / BLOCK_SIZE;
         size_t xBlocks = (image->width + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
