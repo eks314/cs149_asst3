@@ -1,5 +1,5 @@
 
-# Solution
+# Solution Stage 1
 
 Given
 
@@ -25,3 +25,17 @@ So in next step each pixel goes throught the list of circles and applies paintin
 This will be a simple first implementation.
 
 The only implementation question - is handling lists of undefined lengths for circles. For now let's just allocate enough memory initially.
+
+# Solution Stage 2
+
+It appears that the formula of calculation of colour can be represented in this way:
+
+``
+pixel_colour = circle_1 / 2 + circle_2 / 4 + circle_3 / 8 + ..._
+```
+
+Where circle_1 is the closest circle colour, circle_2 is the second closest circle colour, etc.
+
+So taking 0..256 grade of colour component - in reality only first 8 circles matter where remaining circles can add at most 1/256 of colour so taking into account precision error we can ignore them.
+
+Let's make a simple change to reverse shading where we stop at 8 circles max.
