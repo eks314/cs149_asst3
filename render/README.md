@@ -36,6 +36,8 @@ pixel_colour = circle_1 / 2 + circle_2 / 4 + circle_3 / 8 + ..._
 
 Where circle_1 is the closest circle colour, circle_2 is the second closest circle colour, etc.
 
-So taking 0..256 grade of colour component - in reality only first 8 circles matter where remaining circles can add at most 1/256 of colour so taking into account precision error we can ignore them.
+So taking 0..255 grade of colour component - in reality only first 9 pixel-covering circles matter where remaining circles can add less than 0.5/256 of colour so taking into account some error we can ignore them.
 
-Let's make a simple change to reverse shading where we stop at 8 circles max.
+Let's take 10 circles just in case... (and not forget background colour)
+
+Let's make a simple change to reverse shading where we stop at 10 circles max.
