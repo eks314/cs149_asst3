@@ -48,6 +48,7 @@ public:
     void advanceAnimation();
 
     void render();
+    void renderBlunt();
 
     void shadePixel(
         int circleIndex,

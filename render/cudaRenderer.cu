@@ -837,8 +837,12 @@ CudaRenderer::advanceAnimation() {
 
 void
 CudaRenderer::render() {
+    renderBlunt();
+}
+
+void
+CudaRenderer::renderBlunt() {
     {
-        // TODO: remove
         cudaMemset(touchCirclesCount, 0, N_BLOCKS * sizeof(decltype(*touchCirclesCount)));
 
         // 256 threads per block is a healthy number
@@ -863,5 +867,4 @@ CudaRenderer::render() {
         kernelShadeTouchCircles <<< gridDim, blockDim >>> ();
         cudaDeviceSynchronize();
     }
-
 }
