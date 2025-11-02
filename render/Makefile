@@ -31,8 +31,8 @@ FRAMEWORKS :=
 #NVCCFLAGS=-O3 -m64
 NVCCFLAGS=-O0 -m64 -g -G --extended-lambda --std c++20
 # temporary disable
-#LIBS += GL glut cudart
-LIBS += cudart
+LIBS += GL glut cudart
+#LIBS += cudart
 
 ifneq ($(wildcard /opt/cuda-8.0/.*),)
 # Latedays

@@ -178,12 +178,10 @@ int main(int argc, char** argv)
 
         if (!interactiveMode)
             startBenchmark(renderer, benchmarkFrameStart, benchmarkFrameEnd - benchmarkFrameStart, frameFilename);
-#ifdef GLUT
         else {
             glutInit(&argc, argv);
             startRendererWithDisplay(renderer);
         }
-#endif
     }
 
     return 0;
