@@ -84,11 +84,11 @@ generateRandomCircles(
             color[index3] = .3f + .9f * randomFloat();
             color[index3+1] = .1f + .9f * randomFloat();
             color[index3+2] = .1f + .4f * randomFloat();
-	} else {
-	    color[index3] = .2f + .5f * randomFloat();
+	    } else {
+	        color[index3] = .2f + .5f * randomFloat();
             color[index3+1] = .5f + .5f * randomFloat();
             color[index3+2] = .1f + .4f * randomFloat();
-	}
+	    }
     }
 }
 
@@ -130,10 +130,10 @@ generateSizeCircles(
             color[index3+1] = .1f + .9f * randomFloat();
             color[index3+2] = .1f + .4f * randomFloat();
         } else {
-	    color[index3] = .3f + .9f * randomFloat();
+	        color[index3] = .3f + .9f * randomFloat();
             color[index3+1] = .1f + .3f * randomFloat();
             color[index3+2] = .2f + .2f * randomFloat();
-	}
+    	}
     }
 }
 

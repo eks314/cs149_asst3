@@ -449,11 +449,11 @@ __global__ void kernelRenderCircles() {
     }
 }
 
-// shadePixel2 -- (CUDA device code)
+// shadeSquare -- (CUDA device code)
 //
-// same as above, but takes different parameters
+// renders simple colour without checking circle bounds
 __device__ __inline__ float4
-shadeAlwaysSimple(float4 existingColor, float3 rgb) {
+shadeSquare(float4 existingColor, float3 rgb) {
     constexpr float alpha = .5f;
     constexpr float oneMinusAlpha = .5f;
     float4 newColor;
@@ -848,7 +848,7 @@ CudaRenderer::render() {
         dim3 blockDim(xBlocks, yBlocks);
         dim3 gridDim(1, 1);
 
-        kernelBuildTouchCircles << <gridDim, blockDim >> > ();
+        kernelBuildTouchCircles <<< gridDim, blockDim >>> ();
         cudaDeviceSynchronize();
     }
 
@@ -860,7 +860,7 @@ CudaRenderer::render() {
         dim3 blockDim(BLOCK_SIZE, BLOCK_SIZE);
         dim3 gridDim(xBlocks, yBlocks);
 
-        kernelShadeTouchCircles << <gridDim, blockDim >> > ();
+        kernelShadeTouchCircles <<< gridDim, blockDim >>> ();
         cudaDeviceSynchronize();
     }
 
