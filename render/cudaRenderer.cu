@@ -33,7 +33,7 @@ struct TouchCircle
 
 constexpr size_t MAX_SIZE = 1024;
 constexpr size_t BLOCK_SIZE = 32;
-constexpr ushort MAX_CIRCLES_PER_BLOCK = 100;
+constexpr ushort MAX_CIRCLES_PER_BLOCK = 1000;
 constexpr size_t N_BLOCKS = (MAX_SIZE / BLOCK_SIZE) * (MAX_SIZE / BLOCK_SIZE);
 #define myAssert(expr) do { if(!(expr)) { printf("Assert at %s:%d", __FILE__, __LINE__); abort(); } } while(0)
 
