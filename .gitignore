@@ -1,1 +1,5 @@
 output_*
+bin/
+obj/
+render/objs
+.vs/
