@@ -464,7 +464,7 @@ shadeSquare(float4 existingColor, float3 rgb) {
     return newColor;
 }
 
-// shadePixel2 -- (CUDA device code)
+// shadeSimple -- (CUDA device code)
 //
 // same as above, but takes different parameters
 __device__ __inline__ float4
@@ -487,6 +487,30 @@ shadeSimple(float4 existingColor, float3 rgb, float2 pixelCenter, float3 circleP
     newColor.z = alpha * rgb.z + oneMinusAlpha * existingColor.z;
     newColor.w = alpha + existingColor.w;
     return newColor;
+}
+
+// shadeSimple -- (CUDA device code)
+//
+// same as above, but takes different parameters
+__device__ __inline__ void
+shadeReverse(float4& colour, short& intersectionCount, float& multiplier, float3 rgb, float2 pixelCenter, float3 circlePosRad) {
+    float diffX = circlePosRad.x - pixelCenter.x;
+    float diffY = circlePosRad.y - pixelCenter.y;
+    float rad = circlePosRad.z;
+    float pixelDist = diffX * diffX + diffY * diffY;
+    float maxDist = rad * rad;
+    if (pixelDist > maxDist)
+    {
+        return;
+    }
+
+    multiplier *= 0.5f;
+    intersectionCount++;
+
+    colour.x += multiplier * rgb.x;
+    colour.y += multiplier * rgb.y;
+    colour.z += multiplier * rgb.z;
+    colour.w += multiplier * colour.w;
 }
 
 // kernelBuildTouchCircles -- (CUDA device code)
@@ -583,6 +607,63 @@ __global__ void kernelShadeTouchCircles() {
     }
 }
 
+constexpr short MAX_INTERSECTION_COUNT = 10;
+
+// kernelShadeTouchCirclesReverse -- (CUDA device code)
+//
+// Each thread shades a pixel, using the list of circles that
+// potentially contribute to that pixel in reverse order.
+__global__ void kernelShadeTouchCirclesReverse() {
+
+    int pixelX = blockIdx.x * blockDim.x + threadIdx.x;
+    int pixelY = blockIdx.y * blockDim.y + threadIdx.y;
+    int cell = blockIdx.x + blockIdx.y * gridDim.x;
+
+    short imageWidth = cuConstRendererParams.imageWidth;
+    short imageHeight = cuConstRendererParams.imageHeight;
+    float invWidth = 1.f / imageWidth;
+    float invHeight = 1.f / imageHeight;
+
+    ushort touchesCount = cuConstRendererParams.touchCirclesCount[cell];
+    TouchCircle* circlesEndPtr = &cuConstRendererParams.touchCircles[cell * MAX_CIRCLES_PER_BLOCK];
+    TouchCircle* circlesPtr = circlesEndPtr + touchesCount;
+    circlesPtr--;
+    circlesEndPtr--;
+
+    float2 pixelCenter = make_float2(invWidth * (static_cast<float>(pixelX) + 0.5f),
+        invHeight * (static_cast<float>(pixelY) + 0.5f));
+
+    if (circlesPtr > circlesEndPtr)
+    {
+        short imageWidth = cuConstRendererParams.imageWidth;
+
+        float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pixelY * imageWidth + pixelX)]);
+        float4 currentColor = { 0, 0, 0, 0 };
+
+        short intersectionCount = 0;
+        float multiplier = 1.0f;
+
+        do
+        {
+            shadeReverse(currentColor, intersectionCount, multiplier, circlesPtr->colour, pixelCenter, circlesPtr->pos_radius);
+            if (intersectionCount >= MAX_INTERSECTION_COUNT)
+            {
+                break;
+            }
+            circlesPtr--;
+        } while (circlesPtr > circlesEndPtr);
+
+        if (intersectionCount < MAX_INTERSECTION_COUNT)
+        {
+            float4 background = *imgPtr;
+            currentColor.x += multiplier * background.x;
+            currentColor.y += multiplier * background.y;
+            currentColor.z += multiplier * background.z;
+            currentColor.w += multiplier * background.w;
+        }
+        *imgPtr = currentColor;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -837,7 +918,7 @@ CudaRenderer::advanceAnimation() {
 
 void
 CudaRenderer::render() {
-    renderBlunt();
+    renderReverse();
 }
 
 void
@@ -865,6 +946,35 @@ CudaRenderer::renderBlunt() {
         dim3 gridDim(xBlocks, yBlocks);
 
         kernelShadeTouchCircles <<< gridDim, blockDim >>> ();
+        cudaDeviceSynchronize();
+    }
+}
+
+void
+CudaRenderer::renderReverse() {
+    {
+        cudaMemset(touchCirclesCount, 0, N_BLOCKS * sizeof(decltype(*touchCirclesCount)));
+
+        // 256 threads per block is a healthy number
+        size_t yBlocks = (image->height + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        size_t xBlocks = (image->width + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+        dim3 blockDim(xBlocks, yBlocks);
+        dim3 gridDim(1, 1);
+
+        kernelBuildTouchCircles << < gridDim, blockDim >> > ();
+        cudaDeviceSynchronize();
+    }
+
+    {
+        // 256 threads per block is a healthy number
+        size_t yBlocks = (image->height + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        size_t xBlocks = (image->width + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+        dim3 blockDim(BLOCK_SIZE, BLOCK_SIZE);
+        dim3 gridDim(xBlocks, yBlocks);
+
+        kernelShadeTouchCirclesReverse << < gridDim, blockDim >> > ();
         cudaDeviceSynchronize();
     }
 }

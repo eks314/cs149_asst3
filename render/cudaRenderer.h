@@ -49,6 +49,7 @@ public:
 
     void render();
     void renderBlunt();
+    void renderReverse();
 
     void shadePixel(
         int circleIndex,
