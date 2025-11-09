@@ -1013,6 +1013,10 @@ void CudaRenderer::renderAdvanced()
     //          This is the stopping condition!
     //      There is no point to subdivide region further if number of circles is already small
     //          In this case we just point to the same list for all sub regions
+    //      Actually! - we just need to save region pointer for each pixel
+    //                  we can subdivide region as much as we want
+    //                  so subdivision should stop when region has small number of circles and not less than 1 pixel
+    //                  but we need to check overhead of this region splitting also!
 
     //  STAGE 2. Final shading
     //      We need to shade each pixel
