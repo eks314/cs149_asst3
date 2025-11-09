@@ -978,3 +978,45 @@ CudaRenderer::renderReverse() {
         cudaDeviceSynchronize();
     }
 }
+
+void CudaRenderer::renderAdvanced()
+{
+    //  STAGE 1. Build regions with very limited number of circles per region
+
+    //  Step 1a.
+    //      Decide on segment size, allocate memory
+    //  Step 1b.
+    //      We have 1 region, all circles and executors
+    //      Spread all circles in sequential blocks to all executors
+    //      Executor divides region in 4 quadrants sub regions
+    //      Sub regions borders should align with pixel blocks
+    //      Sub region should be at least 1 pixel block in size
+    //      (If region is of size of 1 pixel block then its fully overlaping check should be different)
+    //      For each sub region we define:
+    //          - list of circles that definitely touch it
+    //                  this list consists of segments
+    //                  when segment is full we allocate new segment
+    //                  using atomic operations
+    //                  each segment has counter, size, number of the next segment
+    //                  also let's store number of fully overlapping circles inside segment
+    //          - number of circles that fully overlap it
+    //          - this number may stop iteration earlier
+    //  Step 1c.
+    //      For 4 quandrants sub regions we need to concatenate
+    //      their lists and cut using overlap number
+    //      this is done via iteration over segments sequentially.
+    //  Step 1d.
+    //      Repeat this step to continue to subdivide regions
+    //      Normally we expect that we should not increase total number of circles (significantly at least from some point)
+    //      There is no point to subdivide region further if region is already small
+    //          Note that this condition should be happening automatically by the previous condition
+    //          This is the stopping condition!
+    //      There is no point to subdivide region further if number of circles is already small
+    //          In this case we just point to the same list for all sub regions
+
+    //  STAGE 2. Final shading
+    //      We need to shade each pixel
+    //      Pixel will refer to region
+    //      If there is full overlap in region - we may want to use more advanced logic, but let's skip for now
+    //      It also looks like neigbour pixels may be grouped as may have same colour, again let's skip for now
+}

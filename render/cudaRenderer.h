@@ -50,6 +50,7 @@ public:
     void render();
     void renderBlunt();
     void renderReverse();
+    void renderAdvanced();
 
     void shadePixel(
         int circleIndex,
